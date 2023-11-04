@@ -30,7 +30,6 @@ type Player struct {
 
 //  This function just clears the screen and moves the cursor to the top left.
 func Clear() {
-	// Clear the screen TODO: put this in a function, if I find I am doing this often
 	screen.Clear()
 	screen.MoveTopLeft()
 }
@@ -67,7 +66,7 @@ func main() {
 	// p4 := player{"Caleb", 6, "Right", "Right", 8, "Memphis Mafia"}
 
 	// Start up screen flow
-	Clear()
+	//	Clear()
 	fmt.Println("WELCOME TO MAJOR LEAGUE FUZZBALL")
 	fmt.Println()
 	fmt.Println()
@@ -80,7 +79,7 @@ func main() {
 	fmt.Printf("\tPress \"ENTER\" key to begin...\n")
 	fmt.Scanln()
 
-	Clear()
+	//	Clear()
 
 	// Team selection screens
 	fmt.Println("Select your team")
@@ -135,7 +134,7 @@ func main() {
 
 	time.Sleep(pause)
 
-	Clear()
+	//	Clear()
 
 	fmt.Printf("Alright top of the first and %s will be looking to jump ahead\n", cpuTeam)
 	fmt.Printf("Here we go, as %s takes the field\n", playerTeam)
@@ -161,8 +160,6 @@ func main() {
 		fmt.Println(record)
 
 	}
-	Clear()
-	// Save File to Struct
 
 	game.PlayBall()
 }
