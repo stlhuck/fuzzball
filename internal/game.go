@@ -64,7 +64,10 @@ func PlayBall() {
 	fmt.Println("That's Game")
 }
 
-// Really need to document the logic and clean this up after I get it working.
+// Tracking which bases are occupied and their behavior during an a play
+// This includes when a runner scores, we add to their teams total score
+// In the future, we will track who is on which base (maybe ghost runners, haven't decided)
+// The logic starts are thirdbase and works backwards so that all bases are properly assigned runners
 func BaseTracking(g *Game, b *Bases, numOfBases int) {
 
 	// Handling a runner on thirdbase
@@ -165,11 +168,13 @@ func HalfInning(g *Game) {
 		g.InningDesc = "top"
 	}
 
-	// Printing out a summary for between half innings
-	fmt.Println("Game Summary")
-	fmt.Printf("%v of the %v\n", g.InningDesc, g.Inning)
+	// Printing out a summary for between half innings  TODO: Move this to it's own func and make it a runs, hits, errors display, also display it at the end of the game.
+	fmt.Println("*****\tGame Summary\t*****")
+	fmt.Printf("Going into the %v of the %v\n", g.InningDesc, g.Inning)
 	fmt.Printf("Away Score:\t%v\n", g.AwayScore)
 	fmt.Printf("HomeScore:\t%v\n", g.HomeScore)
+	fmt.Println("******************************")
+	fmt.Println()
 
 	//resetting the bases TODO: Leaving off here as I was try to fiugre out how to manage tracking the bases.  Maybe a fresh start will help.
 	b := Bases{
