@@ -29,7 +29,6 @@ type Bases struct {
 	FirstBase  bool
 	SecondBase bool
 	ThirdBase  bool
-	HomePlate  bool
 }
 
 func Clear() {
@@ -44,14 +43,14 @@ func PlayBall() {
 		InningDesc: "",
 		Outs:       0,
 		AwayHits:   0,
-		AwayScore:  1,
+		AwayScore:  0,
 		AwayErrors: 0,
 		HomeHits:   0,
 		HomeScore:  0,
 		HomeErrors: 0,
 	}
 
-	for g.Inning < 7 {
+	for g.Inning < 3 {
 		//Clear()
 		FullInning(&g)
 
@@ -65,20 +64,71 @@ func PlayBall() {
 	fmt.Println("That's Game")
 }
 
-func BaseTracking(g *Game, bases int, awayOrHome g.InningDesc) {
-	if Bases.ThirdBase == true {
+// Really need to document the logic and clean this up after I get it working.
+func BaseTracking(g *Game, b *Bases, numOfBases int) {
 
+	// Handling a runner on thirdbase
+	if b.ThirdBase && g.InningDesc == "top" {
+		g.AwayScore++
+		b.ThirdBase = false
+	} else if b.ThirdBase && g.InningDesc == "bottom" {
+		g.HomeScore++
+		b.ThirdBase = false
 	}
 
-	switch bases {
-	case 1:
-		Bases.FirstBase = true
-	case 2:
-		Bases.SecondBase = true
-	case 3:
-		Bases.ThirdBase = true
+	// Handling a runner on second base
+	if b.SecondBase {
+		if numOfBases >= 2 {
+			if g.InningDesc == "top" {
+				g.AwayScore++
+				b.SecondBase = false
+			} else if g.InningDesc == "bottom" {
+				g.HomeScore++
+				b.SecondBase = false
+			}
+		} else if numOfBases == 1 {
+			b.ThirdBase = true
+			b.SecondBase = false
+		}
 	}
 
+	// Handling a runner on first base
+	if b.FirstBase {
+		if numOfBases >= 3 {
+			if g.InningDesc == "top" {
+				g.AwayScore++
+				b.FirstBase = false
+			} else if g.InningDesc == "bottom" {
+				g.HomeScore++
+				b.FirstBase = false
+			}
+		} else if numOfBases == 2 {
+			b.ThirdBase = true
+			b.FirstBase = false
+		} else if numOfBases == 1 {
+			b.SecondBase = true
+			b.FirstBase = false
+		}
+	}
+
+	// Handling no runner on first base {
+	if !b.FirstBase {
+		if numOfBases == 4 {
+			if g.InningDesc == "top" {
+				g.AwayScore++
+				b.SecondBase = false
+			} else if g.InningDesc == "bottom" {
+				g.HomeScore++
+				b.SecondBase = false
+			}
+		} else if numOfBases == 3 {
+			b.ThirdBase = true
+		} else if numOfBases == 2 {
+			b.SecondBase = true
+		} else if numOfBases == 1 {
+			b.FirstBase = true
+		}
+	}
 }
 
 func FullInning(g *Game) {
@@ -122,30 +172,33 @@ func HalfInning(g *Game) {
 	fmt.Printf("HomeScore:\t%v\n", g.HomeScore)
 
 	//resetting the bases TODO: Leaving off here as I was try to fiugre out how to manage tracking the bases.  Maybe a fresh start will help.
-	IsOccupied := Bases{
+	b := Bases{
 		FirstBase:  false,
 		SecondBase: false,
 		ThirdBase:  false,
-		HomePlate:  false,
 	}
 
 	for g.Outs < 3 {
-		atBat(g)
+		atBat(g, &b)
 		fmt.Println()
-
+		// fmt.Printf("Debug Summary\ng.Inning:\t%v\ng.Outs:\t%v\ng.HalfInnning:\t%v\ng.InningDesc:\t%v\nb.Bases:\t%v\ng.AwayScore:\t%v\ng.HomeScore:\t%v\n", g.Inning, g.Outs, g.HalfInning, g.InningDesc, b, g.AwayScore, g.HomeScore)
+		// fmt.Println()
+		// time.Sleep(pause)
+		// time.Sleep(pause)
+		// time.Sleep(pause)
 	}
 }
 
 // The atBat function allows for the action between a pitcher and batter
 // The action can result in hits, runs, outs, etc.
-func atBat(g *Game) {
-	time.Sleep(pause)
+func atBat(g *Game, b *Bases) {
+	//time.Sleep(pause)
 	var walk, strikeout int
 
 	chooser, _ := wr.NewChooser(
 		wr.NewChoice("Ball", 2),
-		wr.NewChoice("Strike", 9),
-		wr.NewChoice("Ball In Play", 1),
+		wr.NewChoice("Strike", 6),
+		wr.NewChoice("Ball In Play", 4),
 	)
 
 	for p := 1; p <= 30; p++ {
@@ -159,6 +212,7 @@ func atBat(g *Game) {
 
 			if walk == 4 {
 				fmt.Println("That's a walk, take your base.")
+				BaseTracking(g, b, 1)
 				fmt.Println()
 				return
 			}
@@ -179,7 +233,8 @@ func atBat(g *Game) {
 			}
 		case pitch == "Ball In Play":
 			fmt.Printf("Pitch %v:\t", p)
-			BallInPlay(g)
+			BallInPlay(g, b)
+			fmt.Println()
 			fmt.Println()
 			return
 
@@ -189,7 +244,7 @@ func atBat(g *Game) {
 
 }
 
-func BallInPlay(g *Game) {
+func BallInPlay(g *Game, b *Bases) {
 	// [x] single
 	// [x] double
 	// [x] triple
@@ -208,30 +263,43 @@ func BallInPlay(g *Game) {
 	switch result {
 	case 1:
 		fmt.Print("Single\n")
-		BaseTracking(g, 1)
+		BaseTracking(g, b, 1)
 	case 2:
 		fmt.Printf("Double\n")
-		BaseTracking(g, 2)
+		BaseTracking(g, b, 2)
 	case 3:
 		fmt.Printf("Triple\n")
-		BaseTracking(g, 3)
+		BaseTracking(g, b, 3)
 	case 4:
 		fmt.Printf("Homerun\n")
-		BaseTracking(g, 1)
+		BaseTracking(g, b, 4)
 	case 5:
 		fmt.Printf("catcher's interference\n")
+		BaseTracking(g, b, 1)
 	case 6:
 		fmt.Printf("ground out to pitcher\n")
 		g.Outs++
+		if g.Outs == 3 {
+			g.HalfInning++
+		}
 	case 7:
 		fmt.Printf("ground out to infielder\n")
 		g.Outs++
+		if g.Outs == 3 {
+			g.HalfInning++
+		}
 	case 8:
 		fmt.Printf("Flyout to outfielder\n")
 		g.Outs++
+		if g.Outs == 3 {
+			g.HalfInning++
+		}
 	case 9:
-		fmt.Printf("Hit to softly, that's an out\n")
+		fmt.Printf("Hit too softly, that's an out\n")
 		g.Outs++
+		if g.Outs == 3 {
+			g.HalfInning++
+		}
 	default:
 		fmt.Printf("random number %v\n", result)
 	}
